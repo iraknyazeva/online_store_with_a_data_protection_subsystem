@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row g-5">
+
+        <!-- Левая колонка — Большое фото -->
+        <div class="col-lg-6">
+            <div class="bg-white rounded-4 shadow-sm p-3">
+                <img src="{{ product.image_path or 'https://via.placeholder.com/600x600' }}" 
+                     class="img-fluid rounded-3" 
+                     alt="{{ product.name }}"
+                     style="width: 100%; height: auto; max-height: 520px; object-fit: contain;">
+            </div>
+        </div>
+
+        <!-- Правая колонка — Информация о товаре -->
+        <div class="col-lg-6">
+            <h1 class="display-5 fw-bold mb-3">{{ product.name }}</h1>
+
+            <p class="text-muted mb-4">
+                Категория: 
+                {% if product.categories %}
+                    {{ product.categories[0].name }}
+                {% else %}
+                    Не указана
+                {% endif %}
+            </p>
+
+            <!-- Цена -->
+            <h2 class="mb-4" style="color: #9B2C2C; font-size: 2.4rem; font-weight: 700;">
+                {{ product.price | int }} ₽
+            </h2>
+
+            <!-- Описание -->
+            <div class="mb-5">
+                <p class="lead text-secondary">{{ product.description }}</p>
+            </div>
+
+            <!-- Кнопки действий -->
+            <div class="d-flex gap-3 mb-5">
+                {% if current_user.is_authenticated %}
+                    <!-- Кнопка "В корзину" -->
+                    {% if product.id in in_cart %}
+                        <form method="POST" action="{{ url_for('buyer.update_cart_quantity', product_id=product.id) }}" class="flex-grow-1">
+                            <div class="input-group">
+                                <input type="number" name="quantity" 
+                                       value="{{ cart_quantity | default(1) }}" 
+                                       min="1" class="form-control">
+                                <button type="submit" class="btn btn-outline-primary">Обновить количество</button>
+                            </div>
+                        </form>
+                        <form method="POST" action="{{ url_for('buyer.remove_from_cart_by_product', product_id=product.id) }}">
+                            <button type="submit" class="btn btn-outline-danger">Удалить из корзины</button>
+                        </form>
+                    {% else %}
+                        <form method="POST" action="{{ url_for('buyer.add_to_cart', product_id=product.id) }}" class="flex-grow-1">
+                            <button type="submit" class="btn btn-lg w-100" 
+                                    style="background-color: #228B22; color: white; border: none;">
+                                Добавить в корзину
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    <!-- Сердце избранного -->
+                    <form method="POST" action="{{ url_for('buyer.add_to_favorites', product_id=product.id) }}">
+                        <button type="submit" 
+                                class="favorite-btn {{ 'active' if product.id in in_favorites else '' }}"
+                                title="{{ 'Удалить из избранного' if product.id in in_favorites else 'Добавить в избранное' }}">
+                            {{ '♥' if product.id in in_favorites else '♡' }}
+                        </button>
+                    </form>
+
+                {% else %}
+                    <div class="alert alert-warning w-100">
+                        Чтобы добавить товар в корзину или избранное — 
+                        <a href="{{ url_for('auth.login') }}">войдите</a> или 
+                        <a href="{{ url_for('auth.register') }}">зарегистрируйтесь</a>.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Отзывы -->
+    <div class="mt-5">
+        <h3 class="mb-4">Отзывы о товаре <span class="text-muted">({{ review_count }})</span></h3>
+
+        {% if review_count > 0 %}
+        <div class="d-flex align-items-center mb-4">
+            <span class="display-5 fw-bold text-warning me-3">{{ avg_rating }}</span>
+            <div>
+                <span class="fs-4 text-warning">★</span>
+                <span class="text-muted ms-2">Средняя оценка</span>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Форма отзыва -->
+        {% if current_user.is_authenticated %}
+        <div class="card shadow-sm mb-5">
+            <div class="card-header bg-light">
+                <strong>Оставить отзыв</strong>
+            </div>
+            <div class="card-body">
+                <form method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            {{ form.rating.label(class="form-label") }}
+                            {{ form.rating(class="form-control") }}
+                            {% for error in form.rating.errors %}
+                                <small class="text-danger">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.comment.label(class="form-label") }}
+                        {{ form.comment(class="form-control", rows="4") }}
+                        {% for error in form.comment.errors %}
+                            <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                    </div>
+
+                    {{ form.submit(class="btn btn-primary btn-lg") }}
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            Чтобы оставить отзыв, <a href="{{ url_for('auth.login', next=request.url) }}">войдите в аккаунт</a>.
+        </div>
+        {% endif %}
+
+        <!-- Список отзывов -->
+        {% if reviews %}
+            {% for review in reviews %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong>
+                                {% if review.user %}
+                                    {{ review.user.first_name or '' }} {{ review.user.last_name or 'Покупатель' }}
+                                {% else %}
+                                    Удалённый пользователь
+                                {% endif %}
+                            </strong>
+                        </div>
+                        <div class="text-warning fs-5">
+                            {{ review.rating }} ★
+                        </div>
+                    </div>
+                    <small class="text-muted">
+                        {{ review.created_at.strftime('%d.%m.%Y в %H:%M') }}
+                    </small>
+                    <p class="mt-3 mb-0">{{ review.comment }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted">Пока нет отзывов на этот товар. Будьте первым!</p>
+        {% endif %}
+    </div>
+
+    <!-- Похожие товары -->
+    {% if similar_products %}
+    <div class="mt-5">
+        <h3 class="mb-4">Похожие товары</h3>
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
+            {% for p in similar_products %}
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <img src="{{ p.image_path or 'https://via.placeholder.com/300x200' }}" 
+                         class="card-img-top" 
+                         alt="{{ p.name }}"
+                         style="height: 200px; object-fit: cover;">
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="card-title">{{ p.name }}</h6>
+                        <p class="text-primary fw-bold mb-3">{{ p.price | int }} ₽</p>
+                        <a href="{{ url_for('main.product_detail', product_id=p.id) }}" 
+                           class="btn btn-outline-primary btn-sm mt-auto">
+                            Посмотреть
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

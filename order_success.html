@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Заказ оформлен — успех!{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-success text-white text-center py-4">
+                    <h1 class="mb-0">Заказ успешно оформлен!</h1>
+                </div>
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 5rem;"></i>
+                    
+                    <h3 class="mt-4">Спасибо за покупку!</h3>
+                    <p class="lead">Ваш заказ №<strong>{{ order.id }}</strong> принят в обработку.</p>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="row text-start">
+                        <div class="col-md-6">
+                            <p><strong>Сумма к оплате:</strong> {{ order.total_price | round(2) }} ₽</p>
+                            <p><strong>Статус:</strong> {{ order.status.value | capitalize if order.status else 'Неизвестен' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            {% if decrypted_address %}
+                            <p><strong>Адрес доставки:</strong><br>{{ decrypted_address }}</p>
+                            {% else %}
+                            <p><strong>Адрес:</strong> не указан</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <p class="text-muted">Мы свяжемся с вами для подтверждения и оплаты.</p>
+
+                    <div class="d-grid gap-3 d-md-block mt-5">
+                        <a href="{{ url_for('buyer.order_detail', order_id=order.id) }}" 
+                           class="btn btn-primary btn-lg px-5">
+                            Посмотреть детали заказа
+                        </a>
+                        <a href="{{ url_for('main.index') }}" 
+                           class="btn btn-outline-secondary btn-lg px-5">
+                            Продолжить покупки
+                        </a>
+
+                        <!-- ==================== КНОПКА СИМУЛЯЦИИ ОПЛАТЫ ==================== -->
+                        {% if order.status == 'pending' or order.status.value == 'pending' %}
+                        <div class="mt-4">
+                            <form method="POST" action="{{ url_for('buyer.simulate_payment', order_id=order.id) }}">
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    💳 Симулировать успешную оплату (для тестирования)
+                                </button>
+                            </form>
+                            <small class="text-muted d-block mt-2">
+                                Эта кнопка видна только в режиме разработки для тестирования отзывов
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

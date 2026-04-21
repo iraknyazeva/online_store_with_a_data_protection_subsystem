@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Админ-панель — Заказы{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">Управление заказами</h1>
+
+    <!-- Фильтр по статусу -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <form method="GET" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="status" class="form-label">Статус заказа</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="all" {% if not status_filter or status_filter == 'all' %}selected{% endif %}>Все</option>
+                        {% for status in ['pending', 'processing', 'paid', 'shipped', 'delivered', 'cancelled'] %}
+                            <option value="{{ status }}" {% if status_filter == status %}selected{% endif %}>
+                                {{ status.capitalize() }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Фильтровать</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Таблица заказов -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-hover table-striped mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>№</th>
+                        <th>Пользователь</th>
+                        <th>Сумма</th>
+                        <th>Статус</th>
+                        <th>Дата</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders.items %}
+                    <tr>
+                        <td>{{ order.id }}</td>
+                        <td>
+                            {% if order.user %}
+                                {{ order.user.email }}
+                            {% else %}
+                                <span class="text-muted">Пользователь удалён</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ order.total_price | int }} ₽</td>
+                        <td>
+                            <span class="badge bg-{{ 
+                                'success' if order.status.value == 'delivered' else 
+                                'info' if order.status.value == 'shipped' else 
+                                'warning' if order.status.value in ['pending', 'processing', 'paid'] else 
+                                'danger' }}">
+                                {{ order.status.value.capitalize() }}
+                            </span>
+                        </td>
+                        <td>{{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin.update_order_status', order_id=order.id) }}" class="d-inline">
+                                <select name="status" class="form-select form-select-sm d-inline w-auto">
+                                    {% for status in ['pending', 'processing', 'paid', 'shipped', 'delivered', 'cancelled'] %}
+                                        <option value="{{ status }}" {% if order.status.value == status %}selected{% endif %}>
+                                            {{ status.capitalize() }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-outline-primary ms-2">Изменить</button>
+                            </form>
+                            <a href="{{ url_for('buyer.order_detail', order_id=order.id) }}" 
+                               class="btn btn-sm btn-outline-info ms-2" target="_blank">
+                                Подробно
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">Заказы не найдены</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Пагинация -->
+        <div class="card-footer">
+            {% if orders.has_prev or orders.has_next %}
+            <nav aria-label="Пагинация заказов">
+                <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item {% if not orders.has_prev %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.orders_list', page=orders.prev_num, status=status_filter) }}">Предыдущая</a>
+                    </li>
+                    {% for p in range(1, orders.pages + 1) %}
+                    <li class="page-item {% if p == orders.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.orders_list', page=p, status=status_filter) }}">{{ p }}</a>
+                    </li>
+                    {% endfor %}
+                    <li class="page-item {% if not orders.has_next %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.orders_list', page=orders.next_num, status=status_filter) }}">Следующая</a>
+                    </li>
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">Вернуться в дашборд</a>
+    </div>
+</div>
+{% endblock %}

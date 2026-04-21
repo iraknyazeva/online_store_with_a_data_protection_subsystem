@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}Главная{% endblock %}
+
+{% block content %}
+
+<div class="container mt-5">
+    <div id="catalog"></div>
+    <h1 class="text-center mb-5">Каталог товаров</h1>
+
+    <!-- Поиск + кнопки -->
+    <!-- Поиск + кнопки -->
+    <!-- Поиск + кнопки (стабильный вариант) -->
+    <div class="row g-3 mb-5">
+
+        <!-- Поле поиска -->
+        <div class="col-md-7">
+            <form method="GET" id="search-form">
+                <div class="input-group input-group-lg">
+                    <input type="text" 
+                        name="search" 
+                        class="form-control" 
+                        placeholder="Поиск по названию или описанию товара..."
+                        value="{{ request.args.get('search', '') }}">
+                    
+                    <button type="submit" class="btn px-5" 
+                            style="background-color: #228B22; 
+                                color: white; 
+                                border: none; 
+                                font-weight: 500;
+                                font-size: 1.5rem;">
+                        <i class="fas fa-search me-2"></i>Найти
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Кнопка "Фильтры" -->
+        <div class="col-auto">
+            <button type="button" 
+                    class="btn d-flex align-items-center justify-content-center gap-2 px-4"
+                    data-bs-toggle="modal" data-bs-target="#filterModal"
+                    style="background-color: #228B22; 
+                        color: white; 
+                        font-weight: 500; 
+                        border: none; 
+                        height: 50px; 
+                        white-space: nowrap;
+                        font-size: 1.5rem;">
+                <i class="fas fa-sliders-h"></i>
+                Фильтры
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Модальное окно фильтров -->
+    <!-- Модальное окно фильтров -->
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-semibold" id="filterModalLabel">Фильтры</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <div class="modal-body">
+                <form id="filter-form" method="GET">
+
+                    <!-- Ценовой диапазон -->
+                    <div class="mb-5">
+                        <label class="form-label fw-semibold mb-3">Ценовой диапазон</label>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <label class="small text-muted">От</label>
+                                <div class="input-group">
+                                    <input type="number" 
+                                        id="min_price_input" 
+                                        name="min_price" 
+                                        class="form-control" 
+                                        value="{{ request.args.get('min_price') if request.args.get('min_price') else '' }}" 
+                                        placeholder="0"
+                                        min="0" 
+                                        step="100">
+                                    <span class="input-group-text">₽</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label class="small text-muted">До</label>
+                                <div class="input-group">
+                                    <input type="number" 
+                                        id="max_price_input" 
+                                        name="max_price" 
+                                        class="form-control" 
+                                        value="{{ request.args.get('max_price') if request.args.get('max_price') else '' }}" 
+                                        placeholder="100000"
+                                        min="0" 
+                                        step="100">
+                                    <span class="input-group-text">₽</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Аккордеон категорий - можно открывать несколько -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold mb-3">Категории</label>
+                        <div class="accordion" id="categoryAccordion">
+                            {% for parent in categories if not parent.parent_id %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" 
+                                            data-bs-toggle="collapse" data-bs-target="#cat{{ parent.id }}">
+                                        <i class="fas fa-folder me-2 text-muted"></i>
+                                        {{ parent.name }}
+                                    </button>
+                                </h2>
+                                <div id="cat{{ parent.id }}" class="accordion-collapse collapse">
+                                    <div class="accordion-body pt-0">
+                                        <!-- Выбрать всю категорию -->
+                                        <div class="form-check mb-3">
+                                            <input class="form-check-input parent-check" type="checkbox" 
+                                                   id="parent_{{ parent.id }}" value="{{ parent.id }}"
+                                                   {% if parent.id|string in request.args.getlist('category') %}checked{% endif %}>
+                                            <label class="form-check-label fw-medium" for="parent_{{ parent.id }}">
+                                                Все {{ parent.name|lower }}
+                                            </label>
+                                        </div>
+                                        <!-- Подкатегории -->
+                                        {% for child in parent.children %}
+                                        <div class="form-check ms-4 mb-2">
+                                            <input class="form-check-input child-check" type="checkbox" 
+                                                   name="category" value="{{ child.id }}"
+                                                   id="child_{{ child.id }}"
+                                                   {% if child.id|string in request.args.getlist('category') %}checked{% endif %}>
+                                            <label class="form-check-label" for="child_{{ child.id }}">
+                                                {{ child.name }}
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="search" value="{{ request.args.get('search', '') }}">
+                </form>
+            </div>
+
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary px-4" onclick="resetFilters()">
+                    Сбросить всё
+                </button>
+                <button type="button" class="btn px-5" 
+                        style="background-color: #228B22; color: white; border: none;"
+                        onclick="applyFilters()">
+                    Применить фильтры
+                </button>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    {# Витрина товаров #}
+    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-4">
+        {% for product in products %}
+            <div class="col">
+                <div class="card h-100 shadow-sm border-0 overflow-hidden product-card">
+
+                    <!-- Изображение -->
+                    <a href="{{ url_for('main.product_detail', product_id=product.id) }}" 
+                       class="text-decoration-none">
+                        <img src="{{ product.image_path or 'https://via.placeholder.com/300x300' }}" 
+                             class="card-img-top" 
+                             alt="{{ product.name }}"
+                             style="height: 205px; object-fit: cover;">
+                    </a>
+
+                    <div class="card-body d-flex flex-column p-3">
+                        <h6 class="card-title text-truncate mb-2">{{ product.name }}</h6>
+                        
+                        <p class="card-text text-muted small mb-3" style="line-height: 1.35;">
+                            {{ product.description[:78] }}{% if product.description|length > 78 %}...{% endif %}
+                        </p>
+
+                        <div class="mt-auto">
+                            <p class="price fw-bold mb-3 fs-5" style="color: #9B2C2C;">
+                                {{ product.price | int }} ₽
+                            </p>
+
+                            <div class="d-flex gap-2">
+                                <!-- В корзину -->
+                                <form method="POST" 
+                                      action="{{ url_for('buyer.add_to_cart', product_id=product.id) }}" 
+                                      class="flex-grow-1">
+                                    <button type="submit" class="btn btn-cart w-100">
+                                        В корзину
+                                    </button>
+                                </form>
+
+                                <!-- Избранное -->
+                                <form method="POST" 
+                                      action="{{ url_for('buyer.add_to_favorites', product_id=product.id) }}">
+                                    <button type="submit" 
+                                            class="favorite-btn {{ 'active' if product.id in in_favorites else '' }}">
+                                        {{ '♥' if product.id in in_favorites else '♡' }}
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <p class="text-center lead col-12">Товары не найдены</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

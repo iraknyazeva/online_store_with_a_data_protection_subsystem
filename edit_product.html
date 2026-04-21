@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Редактировать товар — {{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <h1 class="mb-4">Редактировать товар: {{ product.name }}</h1>
+    <p class="text-muted mb-4">ID: {{ product.id }} • Создан: {{ product.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+
+    <div class="row">
+        <!-- Текущее изображение (если есть) -->
+        <div class="col-md-4 mb-4">
+            {% if product.image_path %}
+                <img src="{{ product.image_path }}" class="img-fluid rounded shadow" alt="{{ product.name }}">
+                <p class="text-center mt-2 text-muted small">Текущее фото</p>
+            {% else %}
+                <div class="text-center p-4 bg-light border rounded">
+                    <img src="https://via.placeholder.com/400x400?text=Нет+фото" class="img-fluid" alt="Нет фото">
+                    <p class="mt-2 mb-0 text-muted">Фото отсутствует</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Форма редактирования -->
+        <div class="col-md-8">
+            <form method="POST" enctype="multipart/form-data" novalidate>
+                {{ form.hidden_tag() }}
+
+                <!-- Название -->
+                <div class="mb-3">
+                    {{ form.name.label(class="form-label fw-bold") }}
+                    {{ form.name(class="form-control", placeholder="Например: iPhone 15 Pro Max") }}
+                    {% for error in form.name.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Описание -->
+                <div class="mb-4">
+                    {{ form.description.label(class="form-label fw-bold") }}
+                    {{ form.description(class="form-control", rows=6, placeholder="Подробное описание товара...") }}
+                    {% for error in form.description.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Цена и количество -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        {{ form.price.label(class="form-label fw-bold") }}
+                        {{ form.price(class="form-control", placeholder="99999.99") }}
+                        {% for error in form.price.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.quantity_available.label(class="form-label fw-bold") }}
+                        {{ form.quantity_available(class="form-control", placeholder="50") }}
+                        {% for error in form.quantity_available.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Категории (multiple select) -->
+                <div class="mb-4">
+                    {{ form.categories.label(class="form-label fw-bold") }}
+                    {{ form.categories(class="form-select", multiple=True, size=8) }}
+                    <small class="form-text text-muted">
+                        Зажмите Ctrl (или Cmd на Mac) для выбора нескольких категорий
+                    </small>
+                    {% for error in form.categories.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Новое изображение -->
+                <div class="mb-4">
+                    {{ form.image.label(class="form-label fw-bold") }}
+                    {{ form.image(class="form-control") }}
+                    <small class="form-text text-muted">
+                        Загрузите новое фото (jpg, jpeg, png, gif). Старое будет заменено.
+                    </small>
+                    {% for error in form.image.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Кнопки -->
+                <div class="d-flex gap-3">
+                    {{ form.submit(class="btn btn-primary btn-lg px-5") }}
+                    <a href="{{ url_for('admin.products') }}" class="btn btn-outline-secondary btn-lg px-5">Отмена</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

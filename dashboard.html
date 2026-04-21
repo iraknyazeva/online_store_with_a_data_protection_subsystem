@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Админ-панель — Дашборд{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+
+    <!-- Статистика -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card h-100 shadow-sm border-0" style="border-radius: 18px;">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <p class="text-muted mb-1">Пользователи</p>
+                            <h3 class="fw-bold mb-0">{{ total_users }}</h3>
+                        </div>
+                        <i class="fas fa-users fa-2x" style="color: #9B2C2C; opacity: 0.75;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 shadow-sm border-0" style="border-radius: 18px;">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <p class="text-muted mb-1">Товары</p>
+                            <h3 class="fw-bold mb-0">{{ total_products }}</h3>
+                        </div>
+                        <i class="fas fa-box fa-2x" style="color: #228B22; opacity: 0.75;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 shadow-sm border-0" style="border-radius: 18px;">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <p class="text-muted mb-1">Заказы</p>
+                            <h3 class="fw-bold mb-0">{{ total_orders }}</h3>
+                            <small class="text-danger">Ожидают: {{ pending_orders }}</small>
+                        </div>
+                        <i class="fas fa-shopping-bag fa-2x" style="color: #555; opacity: 0.75;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 shadow-sm border-0" style="border-radius: 18px;">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <p class="text-muted mb-1">Выручка</p>
+                            <h3 class="fw-bold mb-0">{{ revenue | int }} ₽</h3>
+                        </div>
+                        <i class="fas fa-ruble-sign fa-2x" style="color: #228B22; opacity: 0.75;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Последние заказы -->
+    <div class="card shadow-sm border-0 mb-5" style="border-radius: 18px;">
+        <div class="card-header py-3" style="background-color: #2C2C2C; color: white;">
+            <h5 class="mb-0">Последние заказы</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>№</th>
+                        <th>Пользователь</th>
+                        <th>Сумма</th>
+                        <th>Статус</th>
+                        <th>Дата</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in recent_orders %}
+                    <tr>
+                        <td><strong>#{{ order.id }}</strong></td>
+                        <td>{{ order.user.email if order.user else '—' }}</td>
+                        <td class="fw-bold">{{ order.total_price | int }} ₽</td>
+                        <td>
+                            <span class="badge 
+                                {% if order.status.value == 'delivered' %}bg-success
+                                {% elif order.status.value == 'paid' %}bg-primary
+                                {% elif order.status.value in ['pending', 'processing'] %}bg-warning text-dark
+                                {% else %}bg-danger{% endif %}">
+                                {{ order.status.value|capitalize }}
+                            </span>
+                        </td>
+                        <td>{{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Быстрые действия -->
+    <h5 class="mb-4 fw-semibold">Быстрые действия</h5>
+    <div class="row g-3">
+        <div class="col-md-3">
+            <a href="{{ url_for('admin.products_list') }}" 
+               class="btn w-100 py-4 text-start shadow-sm"
+               style="background-color: white; border: 2px solid #9B2C2C; color: #9B2C2C; font-size: 1.08rem;">
+                <i class="fas fa-box me-3"></i>Управление товарами
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ url_for('admin.orders_list') }}" 
+               class="btn w-100 py-4 text-start shadow-sm"
+               style="background-color: white; border: 2px solid #228B22; color: #228B22; font-size: 1.08rem;">
+                <i class="fas fa-shopping-bag me-3"></i>Управление заказами
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ url_for('admin.users_list') }}" 
+               class="btn w-100 py-4 text-start shadow-sm"
+               style="background-color: white; border: 2px solid #555; color: #555; font-size: 1.08rem;">
+                <i class="fas fa-users me-3"></i>Управление пользователями
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ url_for('admin.audit_logs') }}" 
+               class="btn w-100 py-4 text-start shadow-sm"
+               style="background-color: white; border: 2px solid #6c757d; color: #6c757d; font-size: 1.08rem;">
+                <i class="fas fa-clipboard-list me-3"></i>Логи аудита
+            </a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

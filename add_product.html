@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Добавить новый товар{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+    <h1 class="display-5 fw-bold mb-5" style="color: #9B2C2C;">Добавить новый товар</h1>
+
+    <div class="card shadow-sm border-0" style="border-radius: 20px;">
+        <div class="card-body p-5">
+            <form method="POST" enctype="multipart/form-data" novalidate>
+                {{ form.hidden_tag() }}
+
+                <!-- Название -->
+                <div class="mb-4">
+                    {{ form.name.label(class="form-label fw-semibold") }}
+                    {{ form.name(class="form-control form-control-lg", placeholder="Например: Xiaomi 14 Ultra") }}
+                    {% for error in form.name.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Описание -->
+                <div class="mb-4">
+                    {{ form.description.label(class="form-label fw-semibold") }}
+                    {{ form.description(class="form-control", rows="5", placeholder="Подробное описание, характеристики...") }}
+                    {% for error in form.description.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Цена и количество -->
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        {{ form.price.label(class="form-label fw-semibold") }}
+                        {{ form.price(class="form-control form-control-lg", step="0.01", placeholder="99999.99") }}
+                        {% for error in form.price.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.quantity_available.label(class="form-label fw-semibold") }}
+                        {{ form.quantity_available(class="form-control form-control-lg", placeholder="100") }}
+                        {% for error in form.quantity_available.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Аккордеон категорий -->
+                <div class="mb-5">
+                    <label class="form-label fw-semibold mb-3">Категории</label>
+                    <div class="accordion" id="categoryAccordion">
+                        {% for parent in categories if not parent.parent_id %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#cat{{ parent.id }}">
+                                    {{ parent.name }}
+                                </button>
+                            </h2>
+                            <div id="cat{{ parent.id }}" class="accordion-collapse collapse">
+                                <div class="accordion-body pt-0">
+                                    <!-- Выбрать всю категорию -->
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input parent-check" type="checkbox" 
+                                               id="parent_{{ parent.id }}"
+                                               onclick="toggleAllChildren(this)">
+                                        <label class="form-check-label fw-medium" for="parent_{{ parent.id }}">
+                                            Все {{ parent.name|lower }}
+                                        </label>
+                                    </div>
+                                    <!-- Подкатегории -->
+                                    {% for child in parent.children %}
+                                    <div class="form-check ms-4 mb-2">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="categories" 
+                                               value="{{ child.id }}"
+                                               id="child_{{ child.id }}">
+                                        <label class="form-check-label" for="child_{{ child.id }}">
+                                            {{ child.name }}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Фото товара -->
+                <div class="mb-5">
+                    {{ form.image.label(class="form-label fw-semibold") }}
+                    <div class="border rounded-3 p-4 text-center bg-light">
+                        {{ form.image(class="form-control") }}
+                        <small class="text-muted d-block mt-2">
+                            jpg, jpeg, png, gif. Максимум 5 МБ
+                        </small>
+                    </div>
+                    {% for error in form.image.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Кнопки -->
+                <div class="d-flex gap-3 justify-content-end">
+                    <a href="{{ url_for('admin.products_list') }}" 
+                       class="btn btn-outline-secondary px-5 py-3">
+                        Отмена
+                    </a>
+                    {{ form.submit(class="btn px-5 py-3", 
+                                  style="background-color: #228B22; color: white; border: none; font-weight: 500;") }}
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Функция для выбора всех подкатегорий при выборе основной
+function toggleAllChildren(checkbox) {
+    const accordionItem = checkbox.closest('.accordion-item');
+    const childCheckboxes = accordionItem.querySelectorAll('input[type="checkbox"]:not(.parent-check)');
+    childCheckboxes.forEach(child => {
+        child.checked = checkbox.checked;
+    });
+}
+</script>
+{% endblock %}

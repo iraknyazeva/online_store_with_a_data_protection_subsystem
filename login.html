@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Вход{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+
+            <div class="card shadow-sm border-0" style="border-radius: 20px;">
+                <div class="card-body p-5">
+
+                    <h2 class="text-center mb-4 fw-bold">
+                        Вход в аккаунт
+                    </h2>
+
+                    <form method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-4">
+                            {{ form.email.label(class="form-label fw-semibold") }}
+                            {{ form.email(class="form-control form-control-lg", 
+                                         placeholder="example@email.com") }}
+                            {% for error in form.email.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-4">
+                            {{ form.password.label(class="form-label fw-semibold") }}
+                            {{ form.password(class="form-control form-control-lg") }}
+                            {% for error in form.password.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Ссылка "Забыли пароль?" -->
+                        <div class="mb-4 text-end">
+                            <a href="{{ url_for('auth.forgot_password') }}" 
+                               class="text-decoration-none" 
+                               style="color: #9B2C2C; font-weight: 500;">
+                                Забыли пароль?
+                            </a>
+                        </div>
+
+                        <div class="mb-4 form-check">
+                            {{ form.remember(class="form-check-input") }}
+                            {{ form.remember.label(class="form-check-label") }}
+                        </div>
+
+                        <button type="submit" 
+                                class="btn btn-lg w-100 mb-3"
+                                style="background-color: #228B22; 
+                                       color: white; 
+                                       border: none; 
+                                       font-weight: 500;">
+                            Войти
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('auth.register') }}" 
+                           class="text-muted text-decoration-none">
+                            Нет аккаунта? Зарегистрироваться
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

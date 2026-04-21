@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Личный кабинет{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+    <h1 class="display-5 fw-bold mb-5 text-center">Личный кабинет</h1>
+
+    <!-- Карточка с данными пользователя -->
+    <div class="card shadow-sm border-0 mb-5" style="border-radius: 20px; overflow: hidden;">
+        <div class="card-header py-3" style="background-color: #9B2C2C; color: white; font-weight: 500;">
+            <i class="fas fa-user-circle me-2"></i>Ваши данные
+        </div>
+        <div class="card-body p-5">
+            <div class="row g-4" style="font-size: 1.1rem;">
+                <div class="col-md-6"><strong>Email:</strong><br>{{ current_user.email }}</div>
+                <div class="col-md-6"><strong>Имя:</strong><br>{{ current_user.first_name or 'Не указано' }} {{ current_user.last_name or '' }}</div>
+                <div class="col-md-6"><strong>Телефон:</strong><br>{{ decrypted_phone or 'Не указан' }}</div>
+                <div class="col-md-6"><strong>Адрес:</strong><br>{{ decrypted_address or 'Не указан' }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Редактирование профиля -->
+    <div class="row justify-content-center mb-4">
+        <div class="col-md-6">
+            <button id="editProfileBtn" class="btn w-100 py-3 d-flex align-items-center justify-content-center gap-2"
+                    style="background-color: #228B22; color: white; font-size: 1.15rem; border: none;">
+                <i class="fas fa-user-edit"></i> Редактировать профиль
+            </button>
+        </div>
+    </div>
+
+    <div id="editProfileForm" class="card shadow-sm border-0 mb-5" style="display: none; border-radius: 20px;">
+        <div class="card-header py-3" style="background-color: #228B22; color: white;">
+            Редактировать профиль
+        </div>
+        <div class="card-body p-4">
+            <form method="POST" novalidate>
+                {{ profile_form.hidden_tag() }}
+                <!-- поля first_name, last_name, phone, address (как было) -->
+                <div class="mb-3">{{ profile_form.first_name.label(class="form-label fw-medium") }}{{ profile_form.first_name(class="form-control") }}</div>
+                <div class="mb-3">{{ profile_form.last_name.label(class="form-label fw-medium") }}{{ profile_form.last_name(class="form-control") }}</div>
+                <div class="mb-3">{{ profile_form.phone.label(class="form-label fw-medium") }}{{ profile_form.phone(class="form-control") }}</div>
+                <div class="mb-3">{{ profile_form.address.label(class="form-label fw-medium") }}{{ profile_form.address(class="form-control") }}</div>
+
+                <div class="d-flex gap-3 justify-content-end mt-4">
+                    {{ profile_form.submit(class="btn btn-primary px-5") }}
+                    <button type="button" id="cancelEditBtn" class="btn btn-outline-secondary px-5">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- === НОВЫЙ БЛОК: Смена пароля === -->
+    <div class="row justify-content-center mb-4">
+        <div class="col-md-6">
+            <button id="changePasswordBtn" class="btn w-100 py-3 d-flex align-items-center justify-content-center gap-2"
+                    style="background-color: #9B2C2C; color: white; font-size: 1.15rem; border: none;">
+                <i class="fas fa-key"></i> Сменить пароль
+            </button>
+        </div>
+    </div>
+
+    <div id="changePasswordForm" class="card shadow-sm border-0 mb-5" style="display: none; border-radius: 20px;">
+        <div class="card-header py-3" style="background-color: #9B2C2C; color: white;">
+            Смена пароля
+        </div>
+        <div class="card-body p-4">
+            <form method="POST" novalidate>
+                {{ password_form.hidden_tag() }}
+
+                <div class="mb-3">
+                    {{ password_form.old_password.label(class="form-label fw-medium") }}
+                    {{ password_form.old_password(class="form-control") }}
+                    {% for error in password_form.old_password.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    {{ password_form.new_password.label(class="form-label fw-medium") }}
+                    {{ password_form.new_password(class="form-control") }}
+                    {% for error in password_form.new_password.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    {{ password_form.new_password2.label(class="form-label fw-medium") }}
+                    {{ password_form.new_password2(class="form-control") }}
+                    {% for error in password_form.new_password2.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="d-flex gap-3 justify-content-end mt-4">
+                    {{ password_form.submit(class="btn btn-danger px-5") }}
+                    <button type="button" id="cancelPasswordBtn" class="btn btn-outline-secondary px-5">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Нижний блок ссылок -->
+    <div class="d-flex flex-wrap gap-3 justify-content-center mt-4">
+        <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary px-4 py-3 d-flex align-items-center justify-content-center gap-2">
+            <i class="fas fa-home"></i>На главную
+        </a>
+        <a href="{{ url_for('buyer.orders') }}" class="btn btn-outline-danger px-4 py-3 d-flex align-items-center justify-content-center gap-2">
+            <i class="fas fa-history"></i>История заказов
+        </a>
+        <a href="{{ url_for('buyer.cart') }}" class="btn btn-outline-success px-4 py-3 d-flex align-items-center justify-content-center gap-2">
+            <i class="fas fa-shopping-cart"></i>Корзина
+        </a>
+        <a href="{{ url_for('buyer.favorites') }}" class="btn btn-outline-danger px-4 py-3 d-flex align-items-center justify-content-center gap-2">
+            <i class="fas fa-heart"></i>Избранное
+        </a>
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-dark px-4 py-3 d-flex align-items-center justify-content-center gap-2">
+            <i class="fas fa-sign-out-alt"></i>Выход
+        </a>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Редактирование профиля
+    const editBtn = document.getElementById('editProfileBtn');
+    const editForm = document.getElementById('editProfileForm');
+    const cancelEdit = document.getElementById('cancelEditBtn');
+
+    editBtn.addEventListener('click', () => {
+        editForm.style.display = 'block';
+        editBtn.style.display = 'none';
+    });
+    cancelEdit.addEventListener('click', () => {
+        editForm.style.display = 'none';
+        editBtn.style.display = 'block';
+    });
+
+    // Смена пароля
+    const passBtn = document.getElementById('changePasswordBtn');
+    const passForm = document.getElementById('changePasswordForm');
+    const cancelPass = document.getElementById('cancelPasswordBtn');
+
+    passBtn.addEventListener('click', () => {
+        passForm.style.display = 'block';
+        passBtn.style.display = 'none';
+    });
+    cancelPass.addEventListener('click', () => {
+        passForm.style.display = 'none';
+        passBtn.style.display = 'block';
+    });
+</script>
+{% endblock %}

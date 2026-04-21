@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Заказ №{{ order.id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <h1 class="mb-4">Заказ №{{ order.id }}</h1>
+
+    <!-- Основная информация -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Информация о заказе</h5>
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">Дата оформления:</dt>
+                <dd class="col-sm-9">{{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</dd>
+
+                <dt class="col-sm-3">Сумма:</dt>
+                <dd class="col-sm-9 fw-bold">{{ order.total_price | int }} ₽</dd>
+
+                <dt class="col-sm-3">Статус:</dt>
+                <dd class="col-sm-9">
+                    <span class="badge bg-{{ 
+                        'success' if order.status.value == 'delivered' else 
+                        'warning' if order.status.value in ['pending', 'processing'] else 
+                        'danger' if order.status.value == 'cancelled' else 'info'
+                    }}">
+                        {{ order.status.value.capitalize() }}
+                    </span>
+                </dd>
+
+                <dt class="col-sm-3">Адрес доставки:</dt>
+                <dd class="col-sm-9">{{ decrypted_address or 'Не указан' }}</dd>
+
+                <dt class="col-sm-3">Способ оплаты:</dt>
+                <dd class="col-sm-9">Банковская карта (симуляция) / Оплата при получении</dd>
+            </dl>
+        </div>
+    </div>
+
+    <!-- Товары -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Товары в заказе</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Товар</th>
+                        <th>Цена за единицу</th>
+                        <th>Количество</th>
+                        <th>Сумма</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order_items %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('main.product_detail', product_id=item.product_id) }}">
+                                    {{ item.product.name }}
+                                </a>
+                            </td>
+                            <td>{{ item.price_at_purchase | int }} ₽</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ item.price_at_purchase * item.quantity | int }} ₽</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Действия -->
+    <div class="text-end mt-4">
+        {% if order.status.value in ['pending', 'processing'] %}
+            <form method="POST" action="{{ url_for('buyer.cancel_order', order_id=order.id) }}" class="d-inline">
+                <button type="submit" class="btn btn-danger btn-lg me-2" onclick="return confirm('Вы уверены, что хотите отменить заказ?');">
+                    Отменить заказ
+                </button>
+            </form>
+        {% endif %}
+        
+        <a href="{{ url_for('buyer.profile') }}" class="btn btn-secondary btn-lg">
+            Назад в личный кабинет
+        </a>
+    </div>
+</div>
+{% endblock %}

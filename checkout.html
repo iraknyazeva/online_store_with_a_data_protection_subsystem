@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Оформление заказа{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-2">
+
+    <h1 class="display-5 fw-bold mb-4" style="color: #9B2C2C;">Оформление заказа</h1>
+
+    <div class="row g-4 align-items-start">   <!-- ← вот здесь отключено выравнивание по высоте -->
+
+        <!-- Левая колонка — Товары -->
+        <div class="col-lg-7">
+            <h5 class="mb-3 fw-semibold">Товары в заказе ({{ cart_items|length }})</h5>
+
+            {% for item in cart_items %}
+            <div class="card mb-3 shadow-sm border-0 h-auto">   <!-- h-auto — карточка не растягивается -->
+                <div class="row g-0 align-items-center">
+                    <div class="col-3 bg-light p-2 d-flex align-items-center justify-content-center">
+                        <img src="{{ item.product.image_path or 'https://via.placeholder.com/300x300' }}" 
+                             class="img-fluid" 
+                             alt="{{ item.product.name }}"
+                             style="max-height: 85px; object-fit: contain;">
+                    </div>
+                    <div class="col-9">
+                        <div class="card-body py-3 px-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <a href="{{ url_for('main.product_detail', product_id=item.product_id) }}" 
+                                       class="text-decoration-none">
+                                        <h6 class="fw-semibold mb-1">{{ item.product.name }}</h6>
+                                    </a>
+                                    <small class="text-muted">
+                                        {{ item.product.price | int }} ₽ × {{ item.quantity }} шт.
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <h6 class="fw-bold mb-0" style="color: #9B2C2C;">
+                                        {{ (item.product.price * item.quantity) | int }} ₽
+                                    </h6>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Правая колонка — Форма + Итого -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-header py-3" style="background-color: #9B2C2C; color: white;">
+                    <h5 class="mb-0">Данные для доставки</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-4">
+                            {{ form.address.label(class="form-label fw-medium") }}
+                            {{ form.address(class="form-control", placeholder="Улица, дом, квартира, подъезд, этаж, индекс", rows="3") }}
+                            {% for error in form.address.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-4">
+                            {{ form.payment_method.label(class="form-label fw-medium") }}
+                            {{ form.payment_method(class="form-select") }}
+                        </div>
+
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-lg w-100", 
+                                           style="background-color: #228B22; color: white; border: none;") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Итого к оплате -->
+            <div class="card shadow-sm border-0 mt-3">
+                <div class="card-body py-3 px-4 d-flex justify-content-between align-items-center">
+                    <span class="fs-5 fw-semibold">Итого к оплате:</span>
+                    <span class="fs-2 fw-bold" style="color: #9B2C2C;">
+                        {{ total | int }} ₽
+                    </span>
+                </div>
+            </div>
+
+            <div class="mt-4 text-center">
+                <a href="{{ url_for('buyer.cart') }}" class="btn btn-outline-secondary">
+                    ← Вернуться в корзину
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
